@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 import { useNavigate } from 'react-router-dom';
 import { db, storage } from '../config/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
@@ -14,9 +15,6 @@ const ProjectForm = () => {
   });
 
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +54,7 @@ const ProjectForm = () => {
         const donationFileName = formData.donationFile.name;
         const donationFileExtension = donationFileName ? donationFileName.split('.').pop() : '';
         if (donationFileExtension) {
-          const donationFileRef = ref(storage, `donation-files/${newProjectRef.id}.${donationFileExtension}`);
+          const donationFileRef = ref(storage, `donation-files/${donationFileName}`);
           await uploadBytes(donationFileRef, formData.donationFile);
           donationFileUrl = await getDownloadURL(donationFileRef);
         } else {
@@ -71,7 +69,19 @@ const ProjectForm = () => {
         const imageName = image.name;
         const imageExtension = imageName ? imageName.split('.').pop() : '';
         const imageRef = ref(storage, `project-images/${newProjectRef.id}-${i + 1}.${imageExtension}`);
-        await uploadBytes(imageRef, image);
+
+        // Compress the image
+        const options = {
+          maxSizeMB: 1, // Maximum size in MB, change as needed
+          maxWidthOrHeight: 800, // Maximum width or height, change as needed
+          useWebWorker: true, // Use web worker for faster compression
+        };
+
+        const compressedImage = await imageCompression(image, options);
+
+
+
+        await uploadBytes(imageRef, compressedImage);
         const downloadUrl = await getDownloadURL(imageRef);
         projectImagesUrls.push(downloadUrl);
       }

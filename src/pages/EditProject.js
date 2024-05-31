@@ -69,8 +69,7 @@ const EditProject = () => {
 
       if (formData.donationFile) {
         const donationFileName = formData.donationFile.name;
-        const donationFileExtension = donationFileName.split('.').pop();
-        const donationFileRef = ref(storage, `donation-files/${projectId}.${donationFileExtension}`);
+        const donationFileRef = ref(storage, `donation-files/${donationFileName}`);
         await uploadBytes(donationFileRef, formData.donationFile);
         donationFileUrl = await getDownloadURL(donationFileRef);
       }
@@ -107,6 +106,12 @@ const EditProject = () => {
       const fileRef = ref(storage, fileUrl);
       await deleteObject(fileRef);
 
+      // Update the state and Firestore document to remove the file URL
+      setFormData(prevState => ({
+        ...prevState,
+        donationFileUrl: '',
+      }));
+
       // Remove the file URL from the state
       const updatedProjectImagesUrls = formData.projectImagesUrls.filter(url => url !== fileUrl);
       setFormData({
@@ -118,6 +123,7 @@ const EditProject = () => {
       const projectRef = doc(db, 'projects', projectId);
       await updateDoc(projectRef, {
         projectImagesUrls: updatedProjectImagesUrls,
+        donationFileUrl: '',
       });
 
     } catch (error) {
@@ -132,8 +138,14 @@ const EditProject = () => {
           <Loader />
         </div>
       ) : (
-        <div className="py-16 sm:py-24 lg:py-32 px-6 lg:px-8">
+        <div className="py-8 sm:py-12 lg:py-12 px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
+            <button
+                onClick={() => navigate(-1)}
+                className="mt-6 inline-block px-8 py-3 text-lg font-semibold text-white bg-sky-700 rounded-md hover:bg-gray-800"
+            >
+                Back
+            </button>
             <h1 className="text-4xl font-bold text-center text-black mb-8">
               Edit Project
             </h1>
@@ -204,6 +216,19 @@ const EditProject = () => {
                   onChange={handleFileChange}
                   className="mt-2 block w-full text-lg text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
                 />
+                {formData.donationFileUrl && (
+                  <div className="mt-2">
+                    <p className="text-lg font-medium text-black">Uploaded Donation File:</p>
+                    <div className="flex items-center mt-1">
+                      <span className="text-blue-500 underline cursor-pointer" onClick={() => window.open(formData.donationFileUrl, "_blank")}>
+                        Donation file
+                      </span>
+                      <button className="ml-4 inline-block px-1 py-1 text-lg font-semibold text-white bg-red-700 rounded-md hover:bg-gray-800" onClick={() => handleDeleteFile(formData.donationFileUrl)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label
@@ -246,7 +271,7 @@ const EditProject = () => {
               </div>
               <button
                 type="submit"
-                className="inline-block px-8 py-3 text-lg font-semibold text-white bg-black rounded-md hover:bg-gray-800"
+                className="inline-block px-8 py-3 text-lg font-semibold text-white bg-sky-900 rounded-md hover:bg-gray-800"
               >
                 Update Project
               </button>

@@ -14,7 +14,7 @@ const Contact = () => {
           </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div>
-              <h2 className="text-3xl font-semibold text-black mb-4">Get in Touch</h2>
+              <h2 className="text-3xl font-semibold text-black mb-4">Get in Touch with Us</h2>
               <form className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-lg font-medium text-black">
